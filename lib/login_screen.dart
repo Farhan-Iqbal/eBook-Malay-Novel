@@ -27,19 +27,27 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final response = await SupabaseService.client.auth.signInWithPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
+      // Query the 'users' table to find a user with the matching email and password.
+      // NOTE: This approach is INSECURE for a production app as it stores and
+      // queries plain text passwords. For a real app, you must hash the passwords
+      // on registration and verify them with a hashing library (e.g., bcrypt) on login.
+      final response = await SupabaseService.client
+          .from('users')
+          .select('user_id')
+          .eq('email', _emailController.text)
+          .eq('password', _passwordController.text) // This line is insecure!
+          .single();
 
-      if (response.user != null) {
-        // Navigate to the home screen on successful login
+      if (response != null) {
+        // If a user is found, the login is successful.
+        // Navigate to the home screen.
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const HomeScreen()),
           );
         }
       } else {
+        // If no user is found, show an error message.
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Invalid login credentials.')),
@@ -48,8 +56,10 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
+        // Handle potential errors, such as network issues or the user not being found.
+        // The .single() method throws an exception if no row is returned.
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: $e')),
+          const SnackBar(content: Text('Invalid login credentials.')),
         );
       }
     } finally {
