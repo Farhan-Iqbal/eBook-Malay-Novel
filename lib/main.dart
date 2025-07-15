@@ -54,6 +54,7 @@ class _MyAppState extends State<MyApp> {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
+          debugShowCheckedModeBanner: false,
           title: 'Book Nest',
           theme: buildAppTheme(themeProvider.fontSize, themeProvider.isBold, false),
           darkTheme: buildAppTheme(themeProvider.fontSize, themeProvider.isBold, true),
