@@ -74,11 +74,38 @@ class SettingsScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
+                    // Bold Text Toggle
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.format_bold_outlined),
+                            SizedBox(width: 8),
+                            Text('Bold Text:'),
+                          ],
+                        ),
+                        Switch(
+                          value: themeProvider.isBold, // Read from provider
+                          onChanged: (bool value) {
+                            // Update provider state
+                            Provider.of<ThemeProvider>(context, listen: false).toggleBold(value);
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     // Font Size Slider
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Font Size:'),
+                        const Row(
+                          children: [
+                            Icon(Icons.text_fields_outlined),
+                            SizedBox(width: 8),
+                            Text('Font Size:'),
+                          ],
+                        ),
                         Expanded(
                           child: Slider(
                             value: themeProvider.fontSize,
@@ -91,21 +118,6 @@ class SettingsScreen extends StatelessWidget {
                               Provider.of<ThemeProvider>(context, listen: false).setFontSize(value);
                             },
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Bold Text Toggle
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Bold Text:'),
-                        Switch(
-                          value: themeProvider.isBold, // Read from provider
-                          onChanged: (bool value) {
-                            // Update provider state
-                            Provider.of<ThemeProvider>(context, listen: false).toggleBold(value);
-                          },
                         ),
                       ],
                     ),
