@@ -45,43 +45,56 @@ class SettingsScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 48),
-            const Text(
-              'Sample Text to see changes',
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Font Size:'),
-                Expanded(
-                  child: Slider(
-                    value: themeProvider.fontSize, // Read from provider
-                    min: 12.0,
-                    max: 24.0,
-                    divisions: 12,
-                    label: themeProvider.fontSize.round().toString(),
-                    onChanged: (double value) {
-                      // Update provider state
-                      Provider.of<ThemeProvider>(context, listen: false).setFontSize(value);
-                    },
-                  ),
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    const Text(
+                      'Sample Text to see changes',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Font Size:'),
+                        Expanded(
+                          child: Slider(
+                            value: themeProvider.fontSize, // Read from provider
+                            min: 12.0,
+                            max: 24.0,
+                            divisions: 12,
+                            label: themeProvider.fontSize.round().toString(),
+                            onChanged: (double value) {
+                              // Update provider state
+                              Provider.of<ThemeProvider>(context, listen: false).setFontSize(value);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Bold Text:'),
+                        Switch(
+                          value: themeProvider.isBold, // Read from provider
+                          onChanged: (bool value) {
+                            // Update provider state
+                            Provider.of<ThemeProvider>(context, listen: false).toggleBold(value);
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Bold Text:'),
-                Switch(
-                  value: themeProvider.isBold, // Read from provider
-                  onChanged: (bool value) {
-                    // Update provider state
-                    Provider.of<ThemeProvider>(context, listen: false).toggleBold(value);
-                  },
-                ),
-              ],
+              ),
             ),
             const SizedBox(height: 48),
             ElevatedButton.icon(

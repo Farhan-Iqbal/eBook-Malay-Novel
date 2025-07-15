@@ -99,7 +99,7 @@ class _NovelListWidget extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EbookDetailsScreen(ebookId: ebook.ebookId),
+                    builder: (context) => EbookDetailsScreen(ebookId: ebook.ebookId.toString()),
                   ),
                 );
               },

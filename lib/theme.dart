@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
-const Color kPrimaryColor = Color(0xFFB0C4DE); // Light Steel Blue
-const Color kSecondaryColor = Color(0xFFD3D3D3); // Light Gray
-const Color kBackgroundColor = Color(0xFF1E212D); // Dark Slate
-const Color kSurfaceColor = Color(0xFF2B2E3A); // Medium Slate
-const Color kAccentColor = Color(0xFF7B68EE); // Medium Slate Blue
-const Color kTextColor = Color(0xFFEAEAEA); // Light Gray
-const Color kSubtleTextColor = Color(0xFFA0A0A0); // Gray
+// Define your color palette, including the new soft pink
+const Color kPrimaryColor = Color(0xFF4682B4); // Steel Blue
+const Color kSecondaryColor = Color(0xFFADD8E6); // Light Blue
+const Color kBackgroundColor = Color(0xFFF0F2F5); // Light Grayish Blue
+const Color kSurfaceColor = Color(0xFFFFFFFF); // White
+const Color kAccentColor = Color(0xFF1E90FF); // Dodger Blue
+const Color kTextColor = Color(0xFF2C3E50); // Dark Slate Gray
+const Color kSubtleTextColor = Color(0xFF7F8C8D); // Asbestos
+
+// New color for AppBar and Bottom Navigation Bar
+const Color kSoftPink = Color(0xFFF8BBD0); // Soft Pink
 
 class ThemeProvider with ChangeNotifier {
   double _fontSize = 16.0;
@@ -33,18 +37,29 @@ ThemeData buildAppTheme(double fontSize, bool isBold) {
     scaffoldBackgroundColor: kBackgroundColor,
     primaryColor: kPrimaryColor,
     hintColor: kSubtleTextColor,
-    brightness: Brightness.dark,
+    brightness: Brightness.light,
+    
     appBarTheme: const AppBarTheme(
-      backgroundColor: kSurfaceColor,
+      backgroundColor: kSoftPink, // Set AppBar background to soft pink
       elevation: 0,
       iconTheme: IconThemeData(color: kTextColor),
       titleTextStyle: TextStyle(color: kTextColor, fontSize: 20, fontWeight: FontWeight.bold),
     ),
+    
     cardTheme: CardThemeData(
       color: kSurfaceColor,
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
+    
+    // Add the BottomNavigationBar theme
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: kSoftPink, // Set BottomNavigationBar background to soft pink
+      selectedItemColor: kTextColor, // Color for the selected icon/label
+      unselectedItemColor: kSubtleTextColor, // Color for unselected icons/labels
+      elevation: 4,
+    ),
+    
     textTheme: TextTheme(
       displayLarge: TextStyle(color: kTextColor, fontWeight: textFontWeight),
       displayMedium: TextStyle(color: kTextColor, fontWeight: textFontWeight),
@@ -56,19 +71,29 @@ ThemeData buildAppTheme(double fontSize, bool isBold) {
       bodyMedium: TextStyle(color: kSubtleTextColor, fontSize: fontSize, fontWeight: textFontWeight),
       labelLarge: TextStyle(color: kTextColor, fontWeight: FontWeight.bold),
     ),
+    
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: kSurfaceColor,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10.0),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: kSubtleTextColor),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10.0),
+        borderSide: BorderSide(color: kSubtleTextColor.withOpacity(0.5)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10.0),
+        borderSide: const BorderSide(color: kAccentColor, width: 2),
       ),
       labelStyle: const TextStyle(color: kSubtleTextColor),
       hintStyle: const TextStyle(color: kSubtleTextColor),
     ),
+    
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        foregroundColor: kTextColor,
+        foregroundColor: kSurfaceColor,
         backgroundColor: kAccentColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
