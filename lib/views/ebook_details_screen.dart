@@ -6,6 +6,7 @@ import '/repositories/ebook_repository.dart';
 import '/repositories/review_repository.dart';
 import '/repositories/user_repository.dart';
 import '/theme.dart';
+import '/services/supabase_service.dart';
 
 class EbookDetailsScreen extends StatefulWidget {
   final String ebookId;
@@ -31,7 +32,7 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
   }
 
   void _checkFavoriteStatus() async {
-    final status = await UserRepository().isEbookInFavorites(_currentUserId, widget.ebookId);
+    final status = await UserRepository().isEbookInFavorites(widget.ebookId);
     setState(() {
       _isFavorite = status;
     });
@@ -179,53 +180,80 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add a Review'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<int>(
-                  value: _rating,
-                  decoration: const InputDecoration(labelText: 'Rating'),
-                  items: List.generate(5, (index) => index + 1)
-                      .map((e) => DropdownMenuItem(value: e, child: Text('$e'))).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _rating = value!;
-                    });
-                  },
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Add a Review'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Rating',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        final starIndex = index + 1;
+                        return IconButton(
+                          icon: Icon(
+                            Icons.star,
+                            color: _rating >= starIndex
+                                ? Colors.amber
+                                : Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _rating = starIndex;
+                            });
+                          },
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _reviewController,
+                      decoration: const InputDecoration(
+                        labelText: 'Your Review',
+                      ),
+                      maxLines: 4,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _reviewController,
-                  decoration: const InputDecoration(labelText: 'Your Review'),
-                  maxLines: 4,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: kSubtleTextColor),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final userId = SupabaseService.client.auth.currentUser?.id;
+                    if (userId != null) {
+                      await ReviewRepository().submitReview(
+                        ebookId: widget.ebookId,
+                        userId: userId,
+                        rating: _rating,
+                        reviewText: _reviewController.text,
+                      );
+                      Navigator.of(context).pop();
+                      setState(() {
+                        _reviewsFuture = EbookRepository().getEbookReviews(
+                          widget.ebookId,
+                        );
+                      });
+                    }
+                  },
+                  child: const Text('Submit'),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel', style: TextStyle(color: kSubtleTextColor)),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                await ReviewRepository().submitReview(
-                  ebookId: widget.ebookId,
-                  userId: _currentUserId,
-                  rating: _rating,
-                  reviewText: _reviewController.text,
-                );
-                Navigator.of(context).pop();
-                setState(() {
-                  _reviewsFuture = EbookRepository().getEbookReviews(widget.ebookId);
-                });
-              },
-              child: const Text('Submit'),
-            ),
-          ],
+            );
+          },
         );
       },
     );
