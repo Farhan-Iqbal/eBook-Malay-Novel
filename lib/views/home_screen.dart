@@ -57,7 +57,6 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _selectedIndex,
         selectedItemColor: Theme.of(context).primaryColor,
         unselectedItemColor: Colors.grey,
-        backgroundColor: Theme.of(context).cardColor,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
       ),
@@ -65,36 +64,37 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// Extracted the original GridView into a separate StatefulWidget
 class _NovelListWidget extends StatelessWidget {
+  final EbookRepository _ebookRepository = EbookRepository();
+
+  _NovelListWidget();
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Ebook>>(
-      future: EbookRepository().getEbooks(),
+      future: _ebookRepository.getEbooks(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
+        } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No novels found.'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No ebooks found.'));
         }
 
         final ebooks = snapshot.data!;
         return GridView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16.0),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
+            childAspectRatio: 0.7,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: 0.7,
           ),
           itemCount: ebooks.length,
           itemBuilder: (context, index) {
             final ebook = ebooks[index];
-            return GestureDetector(
+            return InkWell(
               onTap: () {
                 Navigator.push(
                   context,

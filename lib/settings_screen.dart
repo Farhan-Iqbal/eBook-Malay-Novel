@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/supabase_service.dart';
-import 'login_screen.dart'; // Import the login screen
+import 'login_screen.dart';
+import '../theme.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -9,7 +11,6 @@ class SettingsScreen extends StatelessWidget {
     try {
       await SupabaseService.client.auth.signOut();
       if (context.mounted) {
-        // Navigate back to the login screen after signing out
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const LoginScreen()),
           (Route<dynamic> route) => false,
@@ -26,20 +27,62 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Read the ThemeProvider state
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Icon(Icons.settings_outlined, size: 80, color: Colors.grey),
             const SizedBox(height: 16),
             const Text(
               'Settings Screen',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
-            const Text('App settings and user actions.'),
+            const SizedBox(height: 48),
+            const Text(
+              'Sample Text to see changes',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Font Size:'),
+                Expanded(
+                  child: Slider(
+                    value: themeProvider.fontSize, // Read from provider
+                    min: 12.0,
+                    max: 24.0,
+                    divisions: 12,
+                    label: themeProvider.fontSize.round().toString(),
+                    onChanged: (double value) {
+                      // Update provider state
+                      Provider.of<ThemeProvider>(context, listen: false).setFontSize(value);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Bold Text:'),
+                Switch(
+                  value: themeProvider.isBold, // Read from provider
+                  onChanged: (bool value) {
+                    // Update provider state
+                    Provider.of<ThemeProvider>(context, listen: false).toggleBold(value);
+                  },
+                ),
+              ],
+            ),
             const SizedBox(height: 48),
             ElevatedButton.icon(
               onPressed: () => _signOut(context),

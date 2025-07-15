@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
 import 'services/supabase_service.dart';
 import 'theme.dart';
 import 'views/home_screen.dart';
-import '/login_screen.dart';
+import 'login_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseService.initialize();
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -45,10 +51,14 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Book Nest',
-      theme: appTheme,
-      home: _user == null ? const LoginScreen() : const HomeScreen(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'Book Nest',
+          theme: buildAppTheme(themeProvider.fontSize, themeProvider.isBold),
+          home: _user == null ? const LoginScreen() : const HomeScreen(),
+        );
+      },
     );
   }
 }

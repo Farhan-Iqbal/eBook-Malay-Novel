@@ -8,51 +8,73 @@ const Color kAccentColor = Color(0xFF7B68EE); // Medium Slate Blue
 const Color kTextColor = Color(0xFFEAEAEA); // Light Gray
 const Color kSubtleTextColor = Color(0xFFA0A0A0); // Gray
 
-final ThemeData appTheme = ThemeData(
-  scaffoldBackgroundColor: kBackgroundColor,
-  primaryColor: kPrimaryColor,
-  hintColor: kSubtleTextColor,
-  brightness: Brightness.dark,
-  appBarTheme: const AppBarTheme(
-    backgroundColor: kSurfaceColor,
-    elevation: 0,
-    iconTheme: IconThemeData(color: kTextColor),
-    titleTextStyle: TextStyle(color: kTextColor, fontSize: 20, fontWeight: FontWeight.bold),
-  ),
-  cardTheme: CardThemeData(
-    color: kSurfaceColor,
-    elevation: 4,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-  ),
-  textTheme: const TextTheme(
-    displayLarge: TextStyle(color: kTextColor, fontWeight: FontWeight.bold),
-    displayMedium: TextStyle(color: kTextColor, fontWeight: FontWeight.bold),
-    displaySmall: TextStyle(color: kTextColor),
-    headlineMedium: TextStyle(color: kTextColor, fontWeight: FontWeight.w600),
-    headlineSmall: TextStyle(color: kTextColor),
-    titleLarge: TextStyle(color: kTextColor, fontWeight: FontWeight.bold),
-    bodyLarge: TextStyle(color: kTextColor),
-    bodyMedium: TextStyle(color: kSubtleTextColor),
-    labelLarge: TextStyle(color: kTextColor, fontWeight: FontWeight.bold),
-  ),
-  inputDecorationTheme: InputDecorationTheme(
-    filled: true,
-    fillColor: kSurfaceColor,
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10.0),
-      borderSide: BorderSide.none,
+class ThemeProvider with ChangeNotifier {
+  double _fontSize = 16.0;
+  bool _isBold = false;
+
+  double get fontSize => _fontSize;
+  bool get isBold => _isBold;
+
+  void setFontSize(double size) {
+    _fontSize = size;
+    notifyListeners();
+  }
+
+  void toggleBold(bool value) {
+    _isBold = value;
+    notifyListeners();
+  }
+}
+
+ThemeData buildAppTheme(double fontSize, bool isBold) {
+  final FontWeight textFontWeight = isBold ? FontWeight.bold : FontWeight.normal;
+
+  return ThemeData(
+    scaffoldBackgroundColor: kBackgroundColor,
+    primaryColor: kPrimaryColor,
+    hintColor: kSubtleTextColor,
+    brightness: Brightness.dark,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: kSurfaceColor,
+      elevation: 0,
+      iconTheme: IconThemeData(color: kTextColor),
+      titleTextStyle: TextStyle(color: kTextColor, fontSize: 20, fontWeight: FontWeight.bold),
     ),
-    labelStyle: const TextStyle(color: kSubtleTextColor),
-    hintStyle: const TextStyle(color: kSubtleTextColor),
-  ),
-  elevatedButtonTheme: ElevatedButtonThemeData(
-    style: ElevatedButton.styleFrom(
-      foregroundColor: kTextColor,
-      backgroundColor: kAccentColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
+    cardTheme: CardThemeData(
+      color: kSurfaceColor,
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+    textTheme: TextTheme(
+      displayLarge: TextStyle(color: kTextColor, fontWeight: textFontWeight),
+      displayMedium: TextStyle(color: kTextColor, fontWeight: textFontWeight),
+      displaySmall: TextStyle(color: kTextColor, fontWeight: textFontWeight),
+      headlineMedium: TextStyle(color: kTextColor, fontWeight: isBold ? FontWeight.w800 : FontWeight.w600),
+      headlineSmall: TextStyle(color: kTextColor, fontWeight: textFontWeight),
+      titleLarge: TextStyle(color: kTextColor, fontWeight: FontWeight.bold),
+      bodyLarge: TextStyle(color: kTextColor, fontSize: fontSize, fontWeight: textFontWeight),
+      bodyMedium: TextStyle(color: kSubtleTextColor, fontSize: fontSize, fontWeight: textFontWeight),
+      labelLarge: TextStyle(color: kTextColor, fontWeight: FontWeight.bold),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: kSurfaceColor,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10.0),
+        borderSide: BorderSide.none,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      labelStyle: const TextStyle(color: kSubtleTextColor),
+      hintStyle: const TextStyle(color: kSubtleTextColor),
     ),
-  ),
-);
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        foregroundColor: kTextColor,
+        backgroundColor: kAccentColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      ),
+    ),
+  );
+}

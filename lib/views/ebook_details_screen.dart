@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '/models/ebook.dart';
 import '/models/review.dart';
 import '/repositories/ebook_repository.dart';
@@ -18,7 +19,7 @@ class EbookDetailsScreen extends StatefulWidget {
 class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
   late Future<Ebook?> _ebookDetailsFuture;
   late Future<List<Review>> _reviewsFuture;
-  final String _currentUserId = 'YOUR_CURRENT_USER_ID'; // Replace with a real user ID
+  final String _currentUserId = 'YOUR_CURRENT_USER_ID';
   bool _isFavorite = false;
 
   @override
@@ -42,14 +43,22 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
     } else {
       await UserRepository().addToFavorites(_currentUserId, widget.ebookId);
     }
-    _checkFavoriteStatus();
+    setState(() {
+      _isFavorite = !_isFavorite;
+    });
   }
+
+  final TextEditingController _reviewController = TextEditingController();
+  int _rating = 5;
 
   @override
   Widget build(BuildContext context) {
+    // Get the current theme from the provider
+    final appTheme = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Novel Details'),
+        title: const Text('Ebook Details'),
         actions: [
           IconButton(
             icon: Icon(
@@ -65,77 +74,61 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
+          } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          if (!snapshot.hasData || snapshot.data == null) {
-            return const Center(child: Text('Novel not found.'));
+          } else if (!snapshot.hasData) {
+            return const Center(child: Text('Ebook not found.'));
           }
 
           final ebook = snapshot.data!;
-
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ... Ebook details UI ...
-                Text(ebook.title, style: Theme.of(context).textTheme.headlineMedium),
+                Center(
+                  child: Container(
+                    height: 200,
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    child: const Center(child: Icon(Icons.book, size: 100)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  ebook.title,
+                  style: TextStyle(
+                    fontSize: appTheme.fontSize + 8, // Use dynamic font size
+                    fontWeight: appTheme.isBold ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Text('by ${ebook.author}', style: Theme.of(context).textTheme.bodyLarge),
+                Text(
+                  'by ${ebook.author}',
+                  style: TextStyle(
+                    fontSize: appTheme.fontSize, // Use dynamic font size
+                    fontWeight: appTheme.isBold ? FontWeight.bold : FontWeight.normal,
+                    color: kSubtleTextColor,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Text(
                   ebook.synopsis ?? 'No synopsis available.',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: TextStyle(
+                    fontSize: appTheme.fontSize, // Use dynamic font size
+                    fontWeight: appTheme.isBold ? FontWeight.bold : FontWeight.normal,
+                  ),
                 ),
                 const SizedBox(height: 24),
+                const Text(
+                  'Reviews',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
                 ElevatedButton(
-                  onPressed: () {
-                    // Implement review submission
-                    _showReviewDialog(context);
-                  },
-                  child: const Text('Write a Review'),
+                  onPressed: () => _showReviewDialog(context),
+                  child: const Text('Add Review'),
                 ),
-                const SizedBox(height: 24),
-                Text('Reviews', style: Theme.of(context).textTheme.headlineSmall),
-                FutureBuilder<List<Review>>(
-                  future: _reviewsFuture,
-                  builder: (context, reviewsSnapshot) {
-                    if (reviewsSnapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (reviewsSnapshot.hasError) {
-                      return Center(child: Text('Error loading reviews: ${reviewsSnapshot.error}'));
-                    }
-                    if (!reviewsSnapshot.hasData || reviewsSnapshot.data!.isEmpty) {
-                      return const Center(child: Text('No reviews yet.'));
-                    }
-
-                    final reviews = reviewsSnapshot.data!;
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: reviews.length,
-                      itemBuilder: (context, index) {
-                        final review = reviews[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          child: ListTile(
-                            title: Text('Rating: ${review.rating} / 5', style: const TextStyle(color: kAccentColor)),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(review.reviewText, style: Theme.of(context).textTheme.bodySmall),
-                                Text('by ${review.userName ?? 'Anonymous'}', style: Theme.of(context).textTheme.bodyMedium),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
+                const SizedBox(height: 16),
+                _buildReviewsList(),
               ],
             ),
           );
@@ -143,17 +136,51 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
       ),
     );
   }
-  
-  void _showReviewDialog(BuildContext context) {
-    int _rating = 1;
-    final TextEditingController _reviewController = TextEditingController();
 
+  Widget _buildReviewsList() {
+    return FutureBuilder<List<Review>>(
+      future: _reviewsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No reviews yet. Be the first to review!'));
+        }
+
+        final reviews = snapshot.data!;
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: reviews.length,
+          itemBuilder: (context, index) {
+            final review = reviews[index];
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                title: Text(
+                  '${review.userName ?? 'Anonymous'} - Rating: ${review.rating}/5',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                subtitle: Text(
+                  review.reviewText,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showReviewDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: kSurfaceColor,
-          title: const Text('Write a Review'),
+          title: const Text('Add a Review'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -162,8 +189,7 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
                   value: _rating,
                   decoration: const InputDecoration(labelText: 'Rating'),
                   items: List.generate(5, (index) => index + 1)
-                      .map((e) => DropdownMenuItem(value: e, child: Text('$e')))
-                      .toList(),
+                      .map((e) => DropdownMenuItem(value: e, child: Text('$e'))).toList(),
                   onChanged: (value) {
                     setState(() {
                       _rating = value!;
@@ -193,7 +219,6 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
                   reviewText: _reviewController.text,
                 );
                 Navigator.of(context).pop();
-                // Refresh reviews
                 setState(() {
                   _reviewsFuture = EbookRepository().getEbookReviews(widget.ebookId);
                 });
