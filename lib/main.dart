@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'services/supabase_service.dart';
 import 'theme.dart';
 import 'views/home_screen.dart';
-import 'login_screen.dart';
+import '/login_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,7 +55,9 @@ class _MyAppState extends State<MyApp> {
       builder: (context, themeProvider, child) {
         return MaterialApp(
           title: 'Book Nest',
-          theme: buildAppTheme(themeProvider.fontSize, themeProvider.isBold),
+          theme: buildAppTheme(themeProvider.fontSize, themeProvider.isBold, false),
+          darkTheme: buildAppTheme(themeProvider.fontSize, themeProvider.isBold, true),
+          themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
           home: _user == null ? const LoginScreen() : const HomeScreen(),
         );
       },

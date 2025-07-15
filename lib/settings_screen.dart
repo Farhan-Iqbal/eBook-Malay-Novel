@@ -40,7 +40,7 @@ class SettingsScreen extends StatelessWidget {
             const Icon(Icons.settings_outlined, size: 80, color: Colors.grey),
             const SizedBox(height: 16),
             const Text(
-              'Settings Screen',
+              'Settings',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
@@ -54,21 +54,37 @@ class SettingsScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    const Text(
-                      'Sample Text to see changes',
-                      textAlign: TextAlign.center,
+                    // Dark Mode Toggle
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.dark_mode_outlined),
+                            SizedBox(width: 8),
+                            Text('Dark Mode:'),
+                          ],
+                        ),
+                        Switch(
+                          value: themeProvider.isDarkMode,
+                          onChanged: (bool value) {
+                            Provider.of<ThemeProvider>(context, listen: false).toggleDarkMode(value);
+                          },
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
+                    // Font Size Slider
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('Font Size:'),
                         Expanded(
                           child: Slider(
-                            value: themeProvider.fontSize, // Read from provider
-                            min: 12.0,
-                            max: 24.0,
-                            divisions: 12,
+                            value: themeProvider.fontSize,
+                            min: 14.0,
+                            max: 20.0,
+                            divisions: 3,
                             label: themeProvider.fontSize.round().toString(),
                             onChanged: (double value) {
                               // Update provider state
@@ -79,6 +95,7 @@ class SettingsScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
+                    // Bold Text Toggle
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
