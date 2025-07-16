@@ -504,23 +504,29 @@ class _FavoriteScreenState extends State<_FavoriteScreen> {
                                   ),
                                 ),
                               ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  ebook.title,
-                                  style: Theme.of(context).textTheme.titleSmall,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Padding(
+                              Container(
+                                height: 60, // ✅ Fixed height for title + author
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 8.0,
-                                  vertical: 4.0,
+                                  vertical: 6.0,
                                 ),
-                                child: Text(
-                                  'by ${ebook.author}',
-                                  style: Theme.of(context).textTheme.bodySmall,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      ebook.title,
+                                      style: Theme.of(context).textTheme.titleSmall,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      'by ${ebook.author}',
+                                      style: Theme.of(context).textTheme.bodySmall,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
