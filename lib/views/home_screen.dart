@@ -287,22 +287,8 @@ class _NovelListWidgetWithSearchState
                               ),
                               ),
                             ),
-<<<<<<< HEAD
                           Container(
                             height: 60, // ✅ Fixed height for title + author
-=======
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              ebook.title,
-                              style: Theme.of(context).textTheme.titleSmall,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Padding(
->>>>>>> 0cd3415579c4cd22ec56aff10d56b0b989525162
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8.0,
                               vertical: 4.0,
