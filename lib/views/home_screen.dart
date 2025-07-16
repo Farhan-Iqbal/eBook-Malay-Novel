@@ -8,6 +8,7 @@ import 'ebook_details_screen.dart';
 import '/profile_screen.dart';
 import '/settings_screen.dart';
 import '/providers/user_providers.dart';
+import 'dart:math';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -258,16 +259,21 @@ class _NovelListWidgetWithSearchState extends State<_NovelListWidgetWithSearch> 
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Expanded(
-                            child: Container(
-                              color: Theme.of(
-                                context,
-                              ).primaryColor.withOpacity(0.1),
-                              child: const Center(
-                                child: Icon(Icons.book, size: 50),
+                            Expanded(
+                              child: Container(
+                              color: Theme.of(context).primaryColor.withOpacity(0.1),
+                              child: Center(
+                                child: Image.network(
+                                'https://picsum.photos/seed/${Random().nextInt(1000)}/200/300',
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                                errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.book, size: 50),
+                                ),
+                              ),
                               ),
                             ),
-                          ),
                           Container(
                             height: 60, // ✅ Fixed height for title + author
                             padding: const EdgeInsets.symmetric(
