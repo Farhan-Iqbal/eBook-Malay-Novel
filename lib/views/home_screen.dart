@@ -9,6 +9,7 @@ import '/profile_screen.dart';
 import '/settings_screen.dart';
 import '/providers/user_providers.dart';
 import 'dart:math';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -261,7 +262,7 @@ class _NovelListWidgetWithSearchState
                   final ebook = ebooks[index];
                   final imageUrl = (ebook.imgUrl != null && ebook.imgUrl!.isNotEmpty)
                   ? ebook.imgUrl!
-                  : 'https://picsum.photos/seed/${Random().nextInt(1000)}/200/300';
+                  : 'https://picsum.photos/seed/${ebook.ebookId}/200/300';
                   return InkWell(
                     onTap: () {
                       Navigator.push(
@@ -283,12 +284,15 @@ class _NovelListWidgetWithSearchState
                               ).primaryColor.withOpacity(0.1),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(4),
-                                child: Image.network(
-                                  imageUrl,
+                                child: CachedNetworkImage(
+                                  imageUrl: imageUrl,
                                   fit: BoxFit.cover,
                                   width: double.infinity,
                                   height: double.infinity,
-                                  errorBuilder: (context, error, stackTrace) =>
+                                  placeholder: (context, url) => const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                  errorWidget: (context, url, error) =>
                                       const Center(
                                         child: Icon(Icons.book, size: 50),
                                       ),
