@@ -5,7 +5,7 @@ import '../models/collection.dart';
 import '../repositories/ebook_repository.dart';
 import '../repositories/user_repository.dart';
 import 'ebook_details_screen.dart';
-import '/profile_screen.dart';
+// import '/profile_screen.dart';
 import '/settings_screen.dart';
 import '/providers/user_providers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -20,7 +20,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  
 
   void _onItemTapped(int index) {
     setState(() {
@@ -35,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final _widgetOptions = <Widget>[
       const _NovelListWidgetWithSearch(), // This is the screen we are modifying
       const _FavoriteScreen(),
-      const ProfileScreen(),
+      // const ProfileScreen(),
       const SettingsScreen(),
     ];
 
@@ -51,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.favorite),
             label: 'Favorite',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          // Removed Profile BottomNavigationBarItem
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Settings',
@@ -263,9 +262,10 @@ class _NovelListWidgetWithSearchState
                 itemCount: ebooks.length,
                 itemBuilder: (context, index) {
                   final ebook = ebooks[index];
-                  final imageUrl = (ebook.imgUrl != null && ebook.imgUrl!.isNotEmpty)
-                  ? ebook.imgUrl!
-                  : 'https://picsum.photos/seed/${ebook.ebookId}/200/300';
+                  final imageUrl =
+                      (ebook.imgUrl != null && ebook.imgUrl!.isNotEmpty)
+                      ? ebook.imgUrl!
+                      : 'https://picsum.photos/seed/${ebook.ebookId}/200/300';
                   return InkWell(
                     onTap: () {
                       Navigator.push(
@@ -285,20 +285,14 @@ class _NovelListWidgetWithSearchState
                               color: Theme.of(
                                 context,
                               ).primaryColor.withOpacity(0.1),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: CachedNetworkImage(
-                                  imageUrl: imageUrl,
+                              child: Center(
+                                child: Image.network(
+                                  'https://picsum.photos/seed/${Random().nextInt(1000)}/200/300',
                                   fit: BoxFit.cover,
                                   width: double.infinity,
                                   height: double.infinity,
-                                  placeholder: (context, url) => const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                  errorWidget: (context, url, error) =>
-                                      const Center(
-                                        child: Icon(Icons.book, size: 50),
-                                      ),
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(Icons.book, size: 50),
                                 ),
                               ),
                             ),
@@ -522,35 +516,37 @@ class _FavoriteScreenState extends State<_FavoriteScreen> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () async {
-            final url = Uri.parse('https://appsamurai.com/blog/mobile-banner-ad-design-tips-for-better-conversion-rate/');
-            if (await canLaunchUrl(url)) {
-              await launchUrl(url, mode: LaunchMode.externalApplication);
-            }
-          },
-          child: Container(
-            height: 80,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Theme.of(context).primaryColor.withOpacity(0.08),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                'https://appsamurai.com/wp-content/uploads/2017/07/8-Reasons-for-Why-You-Should-Try-Boost-Campaign-min-1024x427.png', // Example promo image URL
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return const Center(child: CircularProgressIndicator());
-                },
-                errorBuilder: (context, error, stackTrace) =>
-                    const Center(child: Icon(Icons.campaign, size: 40)),
+            borderRadius: BorderRadius.circular(12),
+            onTap: () async {
+              final url = Uri.parse(
+                'https://appsamurai.com/blog/mobile-banner-ad-design-tips-for-better-conversion-rate/',
+              );
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              }
+            },
+            child: Container(
+              height: 80,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Theme.of(context).primaryColor.withOpacity(0.08),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  'https://appsamurai.com/wp-content/uploads/2017/07/8-Reasons-for-Why-You-Should-Try-Boost-Campaign-min-1024x427.png', // Example promo image URL
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Center(child: Icon(Icons.campaign, size: 40)),
+                ),
               ),
             ),
           ),
-        ),
         ),
       ],
     );
