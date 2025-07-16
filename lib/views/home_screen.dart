@@ -19,6 +19,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  
 
   void _onItemTapped(int index) {
     setState(() {
@@ -258,6 +259,9 @@ class _NovelListWidgetWithSearchState
                 itemCount: ebooks.length,
                 itemBuilder: (context, index) {
                   final ebook = ebooks[index];
+                  final imageUrl = (ebook.imgUrl != null && ebook.imgUrl!.isNotEmpty)
+                  ? ebook.imgUrl!
+                  : 'https://picsum.photos/seed/${Random().nextInt(1000)}/200/300';
                   return InkWell(
                     onTap: () {
                       Navigator.push(
@@ -272,30 +276,49 @@ class _NovelListWidgetWithSearchState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                            Expanded(
-                              child: Container(
-                              color: Theme.of(context).primaryColor.withOpacity(0.1),
-                              child: Center(
+                          Expanded(
+                            child: Container(
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.1),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
                                 child: Image.network(
-                                'https://picsum.photos/seed/${Random().nextInt(1000)}/200/300',
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                                errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.book, size: 50),
+                                  imageUrl,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Center(
+                                        child: Icon(Icons.book, size: 50),
+                                      ),
                                 ),
                               ),
-                              ),
                             ),
+                          ),
                           Container(
                             height: 60, // ✅ Fixed height for title + author
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8.0,
-                              vertical: 4.0,
+                              vertical: 6.0,
                             ),
-                            child: Text(
-                              'by ${ebook.author}',
-                              style: Theme.of(context).textTheme.bodySmall,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  ebook.title,
+                                  style: Theme.of(context).textTheme.titleSmall,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  'by ${ebook.author}',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
                           ),
                         ],
