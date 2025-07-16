@@ -100,112 +100,101 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
     }
   }
 
-  void _showReviewDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (dialogContext, setState) {
-            return AlertDialog(
-              title: const Text('Add Review'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(5, (index) {
-                        return IconButton(
-                          icon: Icon(
-                            index < _rating ? Icons.star : Icons.star_border,
-                            color: Colors.amber,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _rating = index + 1;
-                            });
-                          },
-                        );
-                      }),
-                    ),
-                    TextField(
-                      controller: _reviewController,
-                      decoration: const InputDecoration(
-                        labelText: 'Write your review...',
-                      ),
-                      maxLines: 3,
-                    ),
-                  ],
-                ),
-              ),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(color: kSubtleTextColor),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (_currentUserId == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please log in to submit a review.'),
+  void _showReviewDialog() async {
+  final result = await showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) {
+      int dialogRating = _rating;
+      return StatefulBuilder(
+        builder: (dialogContext, setState) {
+          return AlertDialog(
+            title: const Text('Add Review'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return IconButton(
+                        icon: Icon(
+                          index < dialogRating ? Icons.star : Icons.star_border,
+                          color: Colors.amber,
                         ),
+                        onPressed: () {
+                          setState(() {
+                            dialogRating = index + 1;
+                          });
+                        },
                       );
-                      Navigator.of(context).pop();
-                      return;
-                    }
+                    }),
+                  ),
+                  TextField(
+                    controller: _reviewController,
+                    decoration: const InputDecoration(
+                      labelText: 'Write your review...',
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel', style: TextStyle(color: kSubtleTextColor)),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (_currentUserId == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please log in to submit a review.')),
+                    );
+                    Navigator.of(context).pop(false);
+                    return;
+                  }
 
-                    try {
-                      await ReviewRepository().submitReview(
-                        ebookId: widget.ebookId,
-                        userId: _currentUserId!,
-                        rating: _rating,
-                        reviewText: _reviewController.text,
+                  try {
+                    await ReviewRepository().submitReview(
+                      ebookId: widget.ebookId,
+                      userId: _currentUserId!,
+                      rating: dialogRating,
+                      reviewText: _reviewController.text,
+                    );
+                    Navigator.of(context).pop(true); // Indicate success
+                  } catch (e) {
+                    print('Error submitting review: $e');
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to submit review: $e')),
                       );
-                      Navigator.of(context).pop();
-                      setState(() {
-                        _reviewsFuture = EbookRepository().getEbookReviews(
-                          widget.ebookId,
-                        );
-                      });
-                    } catch (e) {
-                      print('Error submitting review: $e');
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Failed to submit review: $e'),
-                          ),
-                        );
-                      }
                     }
-                  },
-                  child: const Text('Submit'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
+                  }
+                },
+                child: const Text('Submit'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+
+  // If review was submitted, refresh reviews
+  if (result == true) {
+    setState(() {
+      _reviewsFuture = EbookRepository().getEbookReviews(widget.ebookId);
+      _reviewController.clear();
+      _rating = 0;
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ebook Details'),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: _isFavorite ? Colors.red : null,
-            ),
-            onPressed: _toggleFavoriteStatus,
-          ),
-        ],
       ),
       body: FutureBuilder<Ebook?>(
         future: _ebookDetailsFuture,
@@ -255,9 +244,24 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    ebook.title,
-                    style: Theme.of(context).textTheme.headlineMedium,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          ebook.title,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          _isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: _isFavorite ? Colors.red : null,
+                        ),
+                        onPressed: _toggleFavoriteStatus,
+                        tooltip: _isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Text(
