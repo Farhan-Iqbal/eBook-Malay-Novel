@@ -8,7 +8,8 @@ import 'ebook_details_screen.dart';
 // import '/profile_screen.dart';
 import '/settings_screen.dart';
 import '/providers/user_providers.dart';
-import 'dart:math';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -258,6 +259,10 @@ class _NovelListWidgetWithSearchState
                 itemCount: ebooks.length,
                 itemBuilder: (context, index) {
                   final ebook = ebooks[index];
+                  final imageUrl =
+                      (ebook.imgUrl != null && ebook.imgUrl!.isNotEmpty)
+                      ? ebook.imgUrl!
+                      : 'https://picsum.photos/seed/${ebook.ebookId}/200/300';
                   return InkWell(
                     onTap: () {
                       Navigator.push(
@@ -293,11 +298,25 @@ class _NovelListWidgetWithSearchState
                             height: 60, // ✅ Fixed height for title + author
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8.0,
-                              vertical: 4.0,
+                              vertical: 6.0,
                             ),
-                            child: Text(
-                              'by ${ebook.author}',
-                              style: Theme.of(context).textTheme.bodySmall,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  ebook.title,
+                                  style: Theme.of(context).textTheme.titleSmall,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  'by ${ebook.author}',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -423,11 +442,40 @@ class _FavoriteScreenState extends State<_FavoriteScreen> {
                             children: [
                               Expanded(
                                 child: Container(
+                                  height: 200,
+                                  width: 150,
                                   color: Theme.of(
                                     context,
                                   ).primaryColor.withOpacity(0.1),
-                                  child: const Center(
-                                    child: Icon(Icons.book, size: 50),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child:
+                                        (ebook.imgUrl != null &&
+                                            ebook.imgUrl!.isNotEmpty)
+                                        ? Image.network(
+                                            ebook.imgUrl!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) =>
+                                                    const Center(
+                                                      child: Icon(
+                                                        Icons.book,
+                                                        size: 80,
+                                                      ),
+                                                    ),
+                                          )
+                                        : Image.network(
+                                            'https://picsum.photos/seed/${ebook.ebookId}/150/200',
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) =>
+                                                    const Center(
+                                                      child: Icon(
+                                                        Icons.book,
+                                                        size: 80,
+                                                      ),
+                                                    ),
+                                          ),
                                   ),
                                 ),
                               ),
@@ -459,6 +507,42 @@ class _FavoriteScreenState extends State<_FavoriteScreen> {
                 },
               );
             },
+          ),
+        ),
+        // Marketing Banner Section
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () async {
+              final url = Uri.parse(
+                'https://appsamurai.com/blog/mobile-banner-ad-design-tips-for-better-conversion-rate/',
+              );
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              }
+            },
+            child: Container(
+              height: 80,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Theme.of(context).primaryColor.withOpacity(0.08),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  'https://appsamurai.com/wp-content/uploads/2017/07/8-Reasons-for-Why-You-Should-Try-Boost-Campaign-min-1024x427.png', // Example promo image URL
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Center(child: Icon(Icons.campaign, size: 40)),
+                ),
+              ),
+            ),
           ),
         ),
       ],

@@ -231,7 +231,27 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
                       height: 200,
                       width: 150,
                       color: Theme.of(context).primaryColor.withOpacity(0.1),
-                      child: const Center(child: Icon(Icons.book, size: 80)),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child:
+                            (ebook.imgUrl != null && ebook.imgUrl!.isNotEmpty)
+                            ? Image.network(
+                                ebook.imgUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Center(
+                                      child: Icon(Icons.book, size: 80),
+                                    ),
+                              )
+                            : Image.network(
+                                'https://picsum.photos/seed/${ebook.ebookId}/150/200',
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Center(
+                                      child: Icon(Icons.book, size: 80),
+                                    ),
+                              ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),

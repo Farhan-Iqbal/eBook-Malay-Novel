@@ -10,6 +10,7 @@ class Ebook {
   final String? genreId; // Assuming genreId can be null if not linked
   final String? genreName; // Make genreName nullable
   final String? synopsis; // <--- ADD THIS LINE
+  final String? imgUrl; // Assuming img_url can be null if not provided
 
   Ebook({
     required this.ebookId,
@@ -23,6 +24,7 @@ class Ebook {
     this.genreId,
     this.genreName,
     this.synopsis, // <--- ADD THIS LINE TO THE CONSTRUCTOR
+    this.imgUrl,
   });
 
   factory Ebook.fromJson(Map<String, dynamic> json) {
@@ -38,6 +40,7 @@ class Ebook {
       genreId: json['genre_id'] as String?,
       genreName: json['genre_name'] as String?,
       synopsis: json['synopsis'] as String?, // <--- ADD THIS LINE TO fromJson
+      imgUrl: json['img_url'] as String?, // Assuming img_url can be null if not provided
     );
   }
 
@@ -54,6 +57,7 @@ class Ebook {
       'genre_id': genreId,
       'genre_name': genreName,
       'synopsis': synopsis, // <--- ADD THIS LINE TO toJson (if you use it)
+      'img_url': imgUrl, // Assuming img_url can be null if not provided
     };
   }
 }
