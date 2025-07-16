@@ -5,7 +5,7 @@ import '../models/collection.dart';
 import '../repositories/ebook_repository.dart';
 import '../repositories/user_repository.dart';
 import 'ebook_details_screen.dart';
-import '/profile_screen.dart';
+// import '/profile_screen.dart';
 import '/settings_screen.dart';
 import '/providers/user_providers.dart';
 import 'dart:math';
@@ -33,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final _widgetOptions = <Widget>[
       const _NovelListWidgetWithSearch(), // This is the screen we are modifying
       const _FavoriteScreen(),
-      const ProfileScreen(),
+      // const ProfileScreen(),
       const SettingsScreen(),
     ];
 
@@ -49,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.favorite),
             label: 'Favorite',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          // Removed Profile BottomNavigationBarItem
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Settings',
@@ -272,21 +272,23 @@ class _NovelListWidgetWithSearchState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                            Expanded(
-                              child: Container(
-                              color: Theme.of(context).primaryColor.withOpacity(0.1),
+                          Expanded(
+                            child: Container(
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.1),
                               child: Center(
                                 child: Image.network(
-                                'https://picsum.photos/seed/${Random().nextInt(1000)}/200/300',
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                                errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.book, size: 50),
+                                  'https://picsum.photos/seed/${Random().nextInt(1000)}/200/300',
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(Icons.book, size: 50),
                                 ),
                               ),
-                              ),
                             ),
+                          ),
                           Container(
                             height: 60, // ✅ Fixed height for title + author
                             padding: const EdgeInsets.symmetric(
