@@ -91,87 +91,95 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
     }
   }
 
-  void _showReviewDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder (
-          builder: (dialogContext, setState) {
+  void _showReviewDialog() async {
+  final result = await showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) {
+      int dialogRating = _rating;
+      return StatefulBuilder(
+        builder: (dialogContext, setState) {
           return AlertDialog(
-          title: const Text('Add Review'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(5, (index) {
-                    return IconButton(
-                      icon: Icon(
-                        index < _rating ? Icons.star : Icons.star_border,
-                        color: Colors.amber,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _rating = index + 1;
-                        });
-                      },
-                    );
-                  }),
-                ),
-                TextField(
-                  controller: _reviewController,
-                  decoration: const InputDecoration(
-                    labelText: 'Write your review...',
+            title: const Text('Add Review'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return IconButton(
+                        icon: Icon(
+                          index < dialogRating ? Icons.star : Icons.star_border,
+                          color: Colors.amber,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            dialogRating = index + 1;
+                          });
+                        },
+                      );
+                    }),
                   ),
-                  maxLines: 3,
-                ),
-              ],
+                  TextField(
+                    controller: _reviewController,
+                    decoration: const InputDecoration(
+                      labelText: 'Write your review...',
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
+              ),
             ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel', style: TextStyle(color: kSubtleTextColor)),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (_currentUserId == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please log in to submit a review.')),
-                  );
-                  Navigator.of(context).pop();
-                  return;
-                }
-
-                try {
-                  await ReviewRepository().submitReview(
-                    ebookId: widget.ebookId,
-                    userId: _currentUserId!,
-                    rating: _rating,
-                    reviewText: _reviewController.text,
-                  );
-                  Navigator.of(context).pop();
-                  setState(() {
-                    _reviewsFuture = EbookRepository().getEbookReviews(widget.ebookId);
-                  });
-                } catch (e) {
-                  print('Error submitting review: $e');
-                  if (mounted) {
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel', style: TextStyle(color: kSubtleTextColor)),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (_currentUserId == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to submit review: $e')),
+                      const SnackBar(content: Text('Please log in to submit a review.')),
                     );
+                    Navigator.of(context).pop(false);
+                    return;
                   }
-                }
-              },
-              child: const Text('Submit'),
-            ),
-          ],
-        );
-        });
-      },
-    );
+
+                  try {
+                    await ReviewRepository().submitReview(
+                      ebookId: widget.ebookId,
+                      userId: _currentUserId!,
+                      rating: dialogRating,
+                      reviewText: _reviewController.text,
+                    );
+                    Navigator.of(context).pop(true); // Indicate success
+                  } catch (e) {
+                    print('Error submitting review: $e');
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to submit review: $e')),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Submit'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+
+  // If review was submitted, refresh reviews
+  if (result == true) {
+    setState(() {
+      _reviewsFuture = EbookRepository().getEbookReviews(widget.ebookId);
+      _reviewController.clear();
+      _rating = 0;
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -212,7 +220,27 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
                       height: 200,
                       width: 150,
                       color: Theme.of(context).primaryColor.withOpacity(0.1),
-                      child: const Center(child: Icon(Icons.book, size: 80)),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child:
+                            (ebook.imgUrl != null && ebook.imgUrl!.isNotEmpty)
+                            ? Image.network(
+                                ebook.imgUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Center(
+                                      child: Icon(Icons.book, size: 80),
+                                    ),
+                              )
+                            : Image.network(
+                                'https://picsum.photos/seed/${ebook.ebookId}/150/200',
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Center(
+                                      child: Icon(Icons.book, size: 80),
+                                    ),
+                              ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
