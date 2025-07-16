@@ -1,4 +1,6 @@
+import 'package:ebook_malay__novel/providers/user_providers.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // Import Provider
 import '../services/supabase_service.dart';
 import '../theme.dart';
 import '/views/home_screen.dart';
@@ -33,21 +35,23 @@ class _LoginScreenState extends State<LoginScreen> {
       // on registration and verify them with a hashing library (e.g., bcrypt) on login.
       final response = await SupabaseService.client
           .from('users')
-          .select('user_id')
+          .select('user_id') // Select the user_id from your custom table
           .eq('email', _emailController.text)
           .eq('password', _passwordController.text) // This line is insecure!
           .single();
 
-      if (response != null) {
-        // If a user is found, the login is successful.
-        // Navigate to the home screen.
+      if (response != null && response is Map<String, dynamic>) {
+        final String userId = response['user_id'] as String; // Extract the user_id
+
+        // Update the UserProvider with the logged-in user's ID
+        Provider.of<UserProvider>(context, listen: false).setUserId(userId);
+
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const HomeScreen()),
           );
         }
       } else {
-        // If no user is found, show an error message.
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Invalid login credentials.')),
@@ -56,8 +60,6 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
-        // Handle potential errors, such as network issues or the user not being found.
-        // The .single() method throws an exception if no row is returned.
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid login credentials.')),
         );

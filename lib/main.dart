@@ -1,3 +1,4 @@
+import 'package:ebook_malay__novel/providers/user_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
@@ -6,12 +7,16 @@ import 'theme.dart';
 import 'views/home_screen.dart';
 import '/login_screen.dart';
 
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseService.initialize();
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeProvider(),
+    MultiProvider( // Use MultiProvider to manage multiple providers
+      providers: [
+        ChangeNotifierProvider(create: (context) => ThemeProvider()),
+        ChangeNotifierProvider(create: (context) => UserProvider()), // Add UserProvider
+      ],
       child: const MyApp(),
     ),
   );
@@ -25,41 +30,30 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final _supabaseClient = SupabaseService.client;
-  User? _user;
+  // Removed _supabaseClient and _user as we'll primarily rely on UserProvider for custom auth status
+  // final _supabaseClient = SupabaseService.client;
+  // User? _user;
 
   @override
   void initState() {
     super.initState();
-    // Listen for auth state changes
-    _supabaseClient.auth.onAuthStateChange.listen((data) {
-      final event = data.event;
-      if (event == AuthChangeEvent.signedIn || event == AuthChangeEvent.initialSession) {
-        setState(() {
-          _user = data.session?.user;
-        });
-      } else {
-        setState(() {
-          _user = null;
-        });
-      }
-    });
-
-    // Initial check for a session
-    _user = _supabaseClient.auth.currentUser;
+    // No longer directly listening to Supabase auth state changes here for primary user status,
+    // as custom login handles it via UserProvider.
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
+    // Determine which screen to show based on the UserProvider's currentUserId
+    return Consumer2<ThemeProvider, UserProvider>( // Use Consumer2 to listen to both providers
+      builder: (context, themeProvider, userProvider, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Book Nest',
           theme: buildAppTheme(themeProvider.fontSize, themeProvider.isBold, false),
           darkTheme: buildAppTheme(themeProvider.fontSize, themeProvider.isBold, true),
           themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          home: _user == null ? const LoginScreen() : const HomeScreen(),
+          // Now, the home screen is determined by the UserProvider's currentUserId
+          home: userProvider.currentUserId == null ? const LoginScreen() : const HomeScreen(),
         );
       },
     );
