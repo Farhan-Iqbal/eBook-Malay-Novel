@@ -60,7 +60,10 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         selectedItemColor: Theme.of(context).primaryColor,
-        unselectedItemColor: const Color.fromARGB(255, 20, 19, 19),
+        unselectedItemColor: Theme.of(context)
+            .colorScheme
+            .onSurface
+            .withOpacity(0.9), // Use a subtle color for unselected items
         type: BottomNavigationBarType.fixed,
       ),
     );
