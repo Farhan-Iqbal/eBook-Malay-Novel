@@ -120,11 +120,18 @@ class _NovelListWidget extends StatelessWidget {
                     ),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        ebook.title,
-                        style: Theme.of(context).textTheme.titleSmall,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      child: SizedBox(
+                        height: 40, // Adjust based on your font size + spacing
+                        child: Text(
+                          ebook.title,
+                          style: Theme.of(context).textTheme.titleSmall,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textHeightBehavior: const TextHeightBehavior(
+                            applyHeightToFirstAscent: false,
+                            applyHeightToLastDescent: false,
+                          ),
+                        ),
                       ),
                     ),
                     Padding(
@@ -242,7 +249,8 @@ class _NovelListWidgetWithSearchState extends State<_NovelListWidgetWithSearch> 
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => EbookDetailsScreen(ebookId: ebook.ebookId),
+                          builder: (context) =>
+                              EbookDetailsScreen(ebookId: ebook.ebookId),
                         ),
                       );
                     },
@@ -252,24 +260,37 @@ class _NovelListWidgetWithSearchState extends State<_NovelListWidgetWithSearch> 
                         children: [
                           Expanded(
                             child: Container(
-                              color: Theme.of(context).primaryColor.withOpacity(0.1),
-                              child: const Center(child: Icon(Icons.book, size: 50)),
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.1),
+                              child: const Center(
+                                child: Icon(Icons.book, size: 50),
+                              ),
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              ebook.title,
-                              style: Theme.of(context).textTheme.titleSmall,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                          Container(
+                            height: 60, // ✅ Fixed height for title + author
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
+                              vertical: 6.0,
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                            child: Text(
-                              'by ${ebook.author}',
-                              style: Theme.of(context).textTheme.bodySmall,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  ebook.title,
+                                  style: Theme.of(context).textTheme.titleSmall,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  'by ${ebook.author}',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
                           ),
                         ],

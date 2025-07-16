@@ -6,7 +6,6 @@ import '/models/review.dart';
 import '/repositories/ebook_repository.dart';
 import '/repositories/review_repository.dart';
 import '/repositories/user_repository.dart';
-import '/services/supabase_service.dart';
 import '/theme.dart';
 
 class EbookDetailsScreen extends StatefulWidget {
@@ -96,7 +95,9 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
+        return StatefulBuilder (
+          builder: (dialogContext, setState) {
+          return AlertDialog(
           title: const Text('Add Review'),
           content: SingleChildScrollView(
             child: Column(
@@ -167,6 +168,7 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
             ),
           ],
         );
+        });
       },
     );
   }
@@ -297,7 +299,7 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
                                         style: Theme.of(context).textTheme.titleSmall,
                                       ),
                                       const Spacer(),
-                                      _buildStarRating(review.rating),
+                                      buildStaticStarRating(review.rating)
                                     ],
                                   ),
                                   const SizedBox(height: 8),
@@ -336,16 +338,37 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
     );
   }
 
-  Widget _buildStarRating(int rating) {
+  Widget buildInteractiveStarRating({
+    required int rating,
+    required ValueChanged<int> onRatingSelected,
+    double size = 24,
+  }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(5, (index) {
-        return Icon(
-          index < rating ? Icons.star : Icons.star_border,
-          color: Colors.amber,
-          size: 16,
+        final starIndex = index + 1;
+        return InkWell(
+          onTap: () => onRatingSelected(starIndex),
+          child: Icon(
+            rating >= starIndex ? Icons.star : Icons.star_border,
+            color: Colors.amber,
+            size: size,
+          ),
         );
       }),
     );
   }
+  
+  Widget buildStaticStarRating(int rating, {double size = 16}) {
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: List.generate(5, (index) {
+      return Icon(
+        index < rating ? Icons.star : Icons.star_border,
+        color: Colors.amber,
+        size: size,
+      );
+    }),
+  );
+}
 }
