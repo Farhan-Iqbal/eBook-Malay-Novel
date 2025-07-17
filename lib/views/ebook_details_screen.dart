@@ -1,4 +1,5 @@
 import 'package:ebook_malay__novel/providers/user_providers.dart';
+import 'package:ebook_malay__novel/views/read_ebook.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '/models/ebook.dart';
@@ -7,6 +8,7 @@ import '/repositories/ebook_repository.dart';
 import '/repositories/review_repository.dart';
 import '/repositories/user_repository.dart';
 import '/theme.dart';
+// adjust path if needed
 
 class EbookDetailsScreen extends StatefulWidget {
   final String ebookId;
@@ -22,7 +24,8 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
   late Future<List<Review>> _reviewsFuture;
   String? _currentUserId;
   bool _isFavorite = false;
-  bool _hasInitializedFavoriteStatus = false;
+  bool _hasInitialized = false;
+  String? _readingStatus;
   final TextEditingController _reviewController = TextEditingController();
   int _rating = 0;
 
@@ -36,13 +39,17 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_hasInitializedFavoriteStatus) {
+    if (!_hasInitialized) {
       _currentUserId = Provider.of<UserProvider>(
         context,
         listen: false,
       ).currentUserId;
-      _checkFavoriteStatus();
-      _hasInitializedFavoriteStatus = true;
+
+      if (_currentUserId != null) {
+        _checkFavoriteStatus();
+        _loadReadingStatus();
+      }
+      _hasInitialized = true;
     }
   }
 
@@ -53,12 +60,7 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
   }
 
   Future<void> _checkFavoriteStatus() async {
-    if (_currentUserId == null) {
-      setState(() {
-        _isFavorite = false;
-      });
-      return;
-    }
+    if (_currentUserId == null) return;
 
     try {
       final isFavorite = await UserRepository().isEbookInFavorites(
@@ -88,113 +90,224 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
           widget.ebookId,
         );
       } else {
-        await UserRepository().addToFavorites(_currentUserId!, widget.ebookId);
+        await UserRepository().addToFavorites(
+          _currentUserId!,
+          widget.ebookId,
+        );
       }
       setState(() {
         _isFavorite = !_isFavorite;
       });
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to update favorites: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update favorites: $e')),
+      );
     }
   }
 
-  void _showReviewDialog() async {
-  final result = await showDialog<bool>(
-    context: context,
-    builder: (BuildContext context) {
-      int dialogRating = _rating;
-      return StatefulBuilder(
-        builder: (dialogContext, setState) {
-          return AlertDialog(
-            title: const Text('Add Review'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (index) {
-                      return IconButton(
-                        icon: Icon(
-                          index < dialogRating ? Icons.star : Icons.star_border,
-                          color: Colors.amber,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            dialogRating = index + 1;
-                          });
-                        },
-                      );
-                    }),
-                  ),
-                  TextField(
-                    controller: _reviewController,
-                    decoration: const InputDecoration(
-                      labelText: 'Write your review...',
-                    ),
-                    maxLines: 3,
-                  ),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel', style: TextStyle(color: kSubtleTextColor)),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (_currentUserId == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please log in to submit a review.')),
-                    );
-                    Navigator.of(context).pop(false);
-                    return;
-                  }
+  Future<void> _loadReadingStatus() async {
+    if (_currentUserId == null) return;
 
-                  try {
-                    await ReviewRepository().submitReview(
-                      ebookId: widget.ebookId,
-                      userId: _currentUserId!,
-                      rating: dialogRating,
-                      reviewText: _reviewController.text,
-                    );
-                    Navigator.of(context).pop(true); // Indicate success
-                  } catch (e) {
-                    print('Error submitting review: $e');
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to submit review: $e')),
-                      );
-                    }
-                  }
-                },
-                child: const Text('Submit'),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
+    final status = await UserRepository()
+        .getReadingStatus(_currentUserId!, widget.ebookId);
 
-  // If review was submitted, refresh reviews
-  if (result == true) {
     setState(() {
-      _reviewsFuture = EbookRepository().getEbookReviews(widget.ebookId);
-      _reviewController.clear();
-      _rating = 0;
+      _readingStatus = status ?? 'not_started';
     });
   }
-}
+
+  Future<void> _updateReadingStatus(String newStatus) async {
+    if (_currentUserId == null) return;
+
+    await UserRepository().updateReadingStatus(
+      _currentUserId!,
+      widget.ebookId,
+      newStatus,
+    );
+
+    setState(() {
+      _readingStatus = newStatus;
+    });
+  }
+
+  void _handleReadPressed() async {
+    if (_currentUserId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in to read this ebook.')),
+      );
+      return;
+    }
+
+    // update status to currently_reading
+    await _updateReadingStatus('currently_reading');
+
+    // navigate to ReadEbookScreen (adjust the path if necessary)
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReadEbookScreen(
+          ebookId: widget.ebookId,
+          onFinish: () {
+            // Optionally update reading status to 'finished' or perform other actions
+            _updateReadingStatus('finished');
+          },
+        ),
+      ),
+    ).then((_) {
+      // after returning from reading page, optionally mark as finished
+      // comment this out if you want manual control
+      //_updateReadingStatus('finished');
+    });
+  }
+
+  void _showChangeStatusDialog() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Not Started'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _updateReadingStatus('not_started');
+                },
+              ),
+              ListTile(
+                title: const Text('Currently Reading'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _updateReadingStatus('currently_reading');
+                },
+              ),
+              ListTile(
+                title: const Text('Finished'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _updateReadingStatus('finished');
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showReviewDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        int dialogRating = _rating;
+        return StatefulBuilder(
+          builder: (dialogContext, setState) {
+            return AlertDialog(
+              title: const Text('Add Review'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        return IconButton(
+                          icon: Icon(
+                            index < dialogRating
+                                ? Icons.star
+                                : Icons.star_border,
+                            color: Colors.amber,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              dialogRating = index + 1;
+                            });
+                          },
+                        );
+                      }),
+                    ),
+                    TextField(
+                      controller: _reviewController,
+                      decoration: const InputDecoration(
+                        labelText: 'Write your review...',
+                      ),
+                      maxLines: 3,
+                    ),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: kSubtleTextColor),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_currentUserId == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content:
+                                Text('Please log in to submit a review.')),
+                      );
+                      Navigator.of(context).pop(false);
+                      return;
+                    }
+
+                    try {
+                      await ReviewRepository().submitReview(
+                        ebookId: widget.ebookId,
+                        userId: _currentUserId!,
+                        rating: dialogRating,
+                        reviewText: _reviewController.text,
+                      );
+                      Navigator.of(context).pop(true);
+                    } catch (e) {
+                      print('Error submitting review: $e');
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content:
+                                  Text('Failed to submit review: $e')),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Submit'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true) {
+      setState(() {
+        _reviewsFuture =
+            EbookRepository().getEbookReviews(widget.ebookId);
+        _reviewController.clear();
+        _rating = 0;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ebook Details'),
+        actions: [
+          if (_readingStatus != null)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: _showChangeStatusDialog,
+              tooltip: 'Change Reading Status',
+            ),
+        ],
       ),
       body: FutureBuilder<Ebook?>(
         future: _ebookDetailsFuture,
@@ -222,23 +335,23 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
                       color: Theme.of(context).primaryColor.withOpacity(0.1),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child:
-                            (ebook.imgUrl != null && ebook.imgUrl!.isNotEmpty)
+                        child: (ebook.imgUrl != null &&
+                                ebook.imgUrl!.isNotEmpty)
                             ? Image.network(
                                 ebook.imgUrl!,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
                                     const Center(
-                                      child: Icon(Icons.book, size: 80),
-                                    ),
+                                  child: Icon(Icons.book, size: 80),
+                                ),
                               )
                             : Image.network(
                                 'https://picsum.photos/seed/${ebook.ebookId}/150/200',
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
                                     const Center(
-                                      child: Icon(Icons.book, size: 80),
-                                    ),
+                                  child: Icon(Icons.book, size: 80),
+                                ),
                               ),
                       ),
                     ),
@@ -255,11 +368,15 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
                       ),
                       IconButton(
                         icon: Icon(
-                          _isFavorite ? Icons.favorite : Icons.favorite_border,
+                          _isFavorite
+                              ? Icons.favorite
+                              : Icons.favorite_border,
                           color: _isFavorite ? Colors.red : null,
                         ),
                         onPressed: _toggleFavoriteStatus,
-                        tooltip: _isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
+                        tooltip: _isFavorite
+                            ? 'Remove from Favorites'
+                            : 'Add to Favorites',
                       ),
                     ],
                   ),
@@ -267,8 +384,8 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
                   Text(
                     'by ${ebook.author ?? 'N/A'}',
                     style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                      fontStyle: FontStyle.italic,
-                    ),
+                          fontStyle: FontStyle.italic,
+                        ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -312,13 +429,30 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 16),
+                  if (_currentUserId != null)
+                    Row(
+                      children: [
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.menu_book),
+                          label: const Text('Read'),
+                          onPressed: _handleReadPressed,
+                        ),
+                        const SizedBox(width: 16),
+                        Text(
+                          'Status: ${_readingStatus ?? 'N/A'}',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                      ],
+                    ),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'Reviews',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                        style:
+                            Theme.of(context).textTheme.headlineSmall,
                       ),
                       TextButton(
                         onPressed: _showReviewDialog,
@@ -331,40 +465,48 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
                     builder: (context, reviewSnapshot) {
                       if (reviewSnapshot.connectionState ==
                           ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(
+                            child: CircularProgressIndicator());
                       } else if (reviewSnapshot.hasError) {
                         return Center(
                           child: Text('Error: ${reviewSnapshot.error}'),
                         );
                       } else if (!reviewSnapshot.hasData ||
                           reviewSnapshot.data!.isEmpty) {
-                        return const Center(child: Text('No reviews yet.'));
+                        return const Center(
+                            child: Text('No reviews yet.'));
                       }
 
                       final reviews = reviewSnapshot.data!;
                       return ListView.builder(
                         shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
+                        physics:
+                            const NeverScrollableScrollPhysics(),
                         itemCount: reviews.length,
                         itemBuilder: (context, index) {
                           final review = reviews[index];
                           return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 8.0),
+                            margin:
+                                const EdgeInsets.symmetric(vertical: 8.0),
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     children: [
                                       Text(
-                                        review.userName ?? 'Anonymous',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.titleSmall,
+                                        review.userName ??
+                                            'Anonymous',
+                                        style:
+                                            Theme.of(context)
+                                                .textTheme
+                                                .titleSmall,
                                       ),
                                       const Spacer(),
-                                      buildStaticStarRating(review.rating),
+                                      buildStaticStarRating(
+                                          review.rating),
                                     ],
                                   ),
                                   const SizedBox(height: 8),
@@ -386,35 +528,17 @@ class _EbookDetailsScreenState extends State<EbookDetailsScreen> {
     );
   }
 
-  Widget _buildDetailRow(BuildContext context, String label, String value) {
+  Widget _buildDetailRow(
+      BuildContext context, String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        Text(label,
+            style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(height: 4),
-        Text(value, style: Theme.of(context).textTheme.titleSmall),
+        Text(value,
+            style: Theme.of(context).textTheme.titleSmall),
       ],
-    );
-  }
-
-  Widget buildInteractiveStarRating({
-    required int rating,
-    required ValueChanged<int> onRatingSelected,
-    double size = 24,
-  }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (index) {
-        final starIndex = index + 1;
-        return InkWell(
-          onTap: () => onRatingSelected(starIndex),
-          child: Icon(
-            rating >= starIndex ? Icons.star : Icons.star_border,
-            color: Colors.amber,
-            size: size,
-          ),
-        );
-      }),
     );
   }
 

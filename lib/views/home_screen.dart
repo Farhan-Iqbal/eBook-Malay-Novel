@@ -8,7 +8,6 @@ import 'ebook_details_screen.dart';
 // import '/profile_screen.dart';
 import '/settings_screen.dart';
 import '/providers/user_providers.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
