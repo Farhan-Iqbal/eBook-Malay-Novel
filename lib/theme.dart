@@ -1,4 +1,6 @@
+// lib/theme.dart
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Define your color palette, including the new soft pink
 const Color kPrimaryColor = Color(0xFF4682B4); // Steel Blue
@@ -24,75 +26,119 @@ const Color kDarkSubtleTextColor = Color(0xFFB0B0B0);
 class ThemeProvider with ChangeNotifier {
   double _fontSize = 16.0;
   bool _isBold = false;
-  bool _isDarkMode = false; // New property for dark mode
+  bool _isDarkMode = false; // Add _isDarkMode
 
   double get fontSize => _fontSize;
   bool get isBold => _isBold;
-  bool get isDarkMode => _isDarkMode;
+  bool get isDarkMode => _isDarkMode; // Add getter for isDarkMode
 
-  void setFontSize(double size) {
+  ThemeProvider() {
+    _loadThemeSettings();
+  }
+
+  Future<void> _loadThemeSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    _fontSize = prefs.getDouble('fontSize') ?? 16.0;
+    _isBold = prefs.getBool('isBold') ?? false;
+    _isDarkMode = prefs.getBool('isDarkMode') ?? false; // Load dark mode setting
+    notifyListeners();
+  }
+
+  Future<void> setFontSize(double size) async {
     _fontSize = size;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('fontSize', size);
     notifyListeners();
   }
 
-  void toggleBold(bool value) {
-    _isBold = value;
-    notifyListeners();
-  }
-
-  void toggleDarkMode(bool value) {
+  // Corrected toggleDarkMode to accept a boolean value
+  Future<void> toggleDarkMode(bool value) async {
     _isDarkMode = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkMode', value);
+    notifyListeners();
+  }
+
+  // Corrected toggleBold to accept a boolean value
+  Future<void> toggleBold(bool value) async {
+    _isBold = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isBold', value);
     notifyListeners();
   }
 }
 
-ThemeData buildAppTheme(double fontSize, bool isBold, bool isDarkMode) {
-  final FontWeight textFontWeight = isBold ? FontWeight.bold : FontWeight.normal;
 
-  // Use the correct colors based on the mode
-  final Color primaryColor = isDarkMode ? kDarkPrimaryColor : kPrimaryColor;
-  final Color secondaryColor = isDarkMode ? kDarkSecondaryColor : kSecondaryColor;
-  final Color backgroundColor = isDarkMode ? kDarkBackgroundColor : kBackgroundColor;
-  final Color surfaceColor = isDarkMode ? kDarkSurfaceColor : kSurfaceColor;
-  final Color accentColor = isDarkMode ? kDarkAccentColor : kAccentColor;
-  final Color textColor = isDarkMode ? kDarkTextColor : kTextColor;
-  final Color subtleTextColor = isDarkMode ? kDarkSubtleTextColor : kSubtleTextColor;
-  final Color softPink = isDarkMode ? kDarkPrimaryColor : kSoftPink;
+ThemeData buildAppTheme(double fontSize, bool isBold, bool isDark) {
+  // Define colors based on theme
+  final Color primaryColor = isDark ? kDarkPrimaryColor : kPrimaryColor;
+  final Color secondaryColor = isDark ? kDarkSecondaryColor : kSecondaryColor;
+  final Color backgroundColor = isDark ? kDarkBackgroundColor : kBackgroundColor;
+  final Color surfaceColor = isDark ? kDarkSurfaceColor : kSurfaceColor;
+  final Color accentColor = isDark ? kDarkAccentColor : kAccentColor;
+  final Color textColor = isDark ? kDarkTextColor : kTextColor;
+  final Color subtleTextColor = isDark ? kDarkSubtleTextColor : kSubtleTextColor;
+
+  FontWeight textFontWeight = isBold ? FontWeight.bold : FontWeight.normal;
 
   return ThemeData(
-    brightness: isDarkMode ? Brightness.dark : Brightness.light,
+    brightness: isDark ? Brightness.dark : Brightness.light,
+    primaryColor: primaryColor,
     scaffoldBackgroundColor: backgroundColor,
+    cardColor: surfaceColor,
+    canvasColor: backgroundColor,
+    highlightColor: accentColor.withOpacity(0.1),
+    splashColor: accentColor.withOpacity(0.1),
     colorScheme: ColorScheme.fromSeed(
       seedColor: primaryColor,
+      brightness: isDark ? Brightness.dark : Brightness.light,
       primary: primaryColor,
+      onPrimary: Colors.white,
       secondary: secondaryColor,
-      surface: surfaceColor,
-      background: backgroundColor,
-      onPrimary: surfaceColor,
-      onSecondary: surfaceColor,
-      onSurface: textColor,
-      onBackground: textColor,
+      onSecondary: Colors.white,
       error: Colors.red,
       onError: Colors.white,
-      brightness: isDarkMode ? Brightness.dark : Brightness.light,
+      background: backgroundColor,
+      onBackground: textColor,
+      surface: surfaceColor,
+      onSurface: textColor,
     ),
     appBarTheme: AppBarTheme(
-      backgroundColor: softPink,
-      foregroundColor: textColor,
+      color: primaryColor,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: true,
+      titleTextStyle: TextStyle(
+        color: Colors.white,
+        fontSize: fontSize + 4,
+        fontWeight: FontWeight.bold,
+      ),
     ),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: softPink,
-      selectedItemColor: primaryColor,
-      unselectedItemColor: subtleTextColor,
+      backgroundColor: primaryColor, // Apply primary color
+      // OPTION 1: High contrast selected item color
+      selectedItemColor: isDark ? Colors.white : Colors.amber,
+      unselectedItemColor: Colors.white.withOpacity(0.7),
+      type: BottomNavigationBarType.fixed,
+      elevation: 8,
+      selectedLabelStyle: TextStyle(fontWeight: textFontWeight),
+      unselectedLabelStyle: TextStyle(fontWeight: textFontWeight),
     ),
     textTheme: TextTheme(
-      headlineSmall: TextStyle(color: textColor, fontWeight: FontWeight.bold),
-      titleLarge: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+      displayLarge: TextStyle(color: textColor, fontSize: fontSize * 2.5, fontWeight: textFontWeight),
+      displayMedium: TextStyle(color: textColor, fontSize: fontSize * 2, fontWeight: textFontWeight),
+      displaySmall: TextStyle(color: textColor, fontSize: fontSize * 1.8, fontWeight: textFontWeight),
+      headlineLarge: TextStyle(color: textColor, fontSize: fontSize * 1.7, fontWeight: textFontWeight),
+      headlineMedium: TextStyle(color: textColor, fontSize: fontSize * 1.5, fontWeight: textFontWeight),
+      headlineSmall: TextStyle(color: textColor, fontSize: fontSize * 1.3, fontWeight: textFontWeight),
+      titleLarge: TextStyle(color: textColor, fontSize: fontSize + 4, fontWeight: textFontWeight),
+      titleMedium: TextStyle(color: textColor, fontSize: fontSize + 2, fontWeight: textFontWeight),
+      titleSmall: TextStyle(color: textColor, fontSize: fontSize, fontWeight: textFontWeight),
       bodyLarge: TextStyle(color: textColor, fontSize: fontSize, fontWeight: textFontWeight),
       bodyMedium: TextStyle(color: subtleTextColor, fontSize: fontSize, fontWeight: textFontWeight),
       labelLarge: TextStyle(color: textColor, fontWeight: FontWeight.bold),
     ),
-    
+
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: surfaceColor,
@@ -111,7 +157,7 @@ ThemeData buildAppTheme(double fontSize, bool isBold, bool isDarkMode) {
       labelStyle: TextStyle(color: subtleTextColor),
       hintStyle: TextStyle(color: subtleTextColor),
     ),
-    
+
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         foregroundColor: surfaceColor,
@@ -124,6 +170,27 @@ ThemeData buildAppTheme(double fontSize, bool isBold, bool isDarkMode) {
           fontSize: 18,
           fontWeight: FontWeight.bold,
         ),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: accentColor,
+        textStyle: TextStyle(
+          fontSize: fontSize,
+          fontWeight: textFontWeight,
+        ),
+      ),
+    ),
+    // Add these properties for consistent styling of cards and dialogs
+    cardTheme: const CardThemeData(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
+    ),
+    dialogTheme: const DialogThemeData(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(15)),
       ),
     ),
   );

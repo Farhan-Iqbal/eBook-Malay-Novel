@@ -6,16 +6,22 @@ import 'services/supabase_service.dart';
 import 'theme.dart';
 import 'views/home_screen.dart';
 import '/login_screen.dart';
-
+import 'providers/subscription_provider.dart'; // Import the new provider
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseService.initialize();
+
+  // Initialize and load subscription status before running the app
+  final subscriptionProvider = SubscriptionProvider();
+  await subscriptionProvider.loadSubscriptionStatus();
+
   runApp(
-    MultiProvider( // Use MultiProvider to manage multiple providers
+    MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
-        ChangeNotifierProvider(create: (context) => UserProvider()), // Add UserProvider
+        ChangeNotifierProvider(create: (context) => UserProvider()),
+        ChangeNotifierProvider.value(value: subscriptionProvider), // Add SubscriptionProvider
       ],
       child: const MyApp(),
     ),
@@ -30,30 +36,25 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // Removed _supabaseClient and _user as we'll primarily rely on UserProvider for custom auth status
-  // final _supabaseClient = SupabaseService.client;
-  // User? _user;
-
   @override
   void initState() {
     super.initState();
-    // No longer directly listening to Supabase auth state changes here for primary user status,
-    // as custom login handles it via UserProvider.
   }
 
   @override
   Widget build(BuildContext context) {
     // Determine which screen to show based on the UserProvider's currentUserId
-    return Consumer2<ThemeProvider, UserProvider>( // Use Consumer2 to listen to both providers
-      builder: (context, themeProvider, userProvider, child) {
+    return Consumer3<ThemeProvider, UserProvider, SubscriptionProvider>( // Use Consumer3
+      builder: (context, themeProvider, userProvider, subscriptionProvider, child) { // Add subscriptionProvider
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Book Nest',
           theme: buildAppTheme(themeProvider.fontSize, themeProvider.isBold, false),
           darkTheme: buildAppTheme(themeProvider.fontSize, themeProvider.isBold, true),
           themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          // Now, the home screen is determined by the UserProvider's currentUserId
-          home: userProvider.currentUserId == null ? const LoginScreen() : const HomeScreen(),
+          home: userProvider.currentUserId == null
+              ? const LoginScreen()
+              : const HomeScreen(),
         );
       },
     );

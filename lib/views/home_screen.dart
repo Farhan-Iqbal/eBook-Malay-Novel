@@ -57,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Theme.of(context).primaryColor,
+        selectedItemColor: Color.fromARGB(255, 2, 227, 248), // Steel Blue
         unselectedItemColor: Theme.of(context)
             .colorScheme
             .onSurface
